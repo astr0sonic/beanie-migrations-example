@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  db:
+    image: mongo:latest
+    env_file:
+      - ./.env
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo/mongo.key:/mongo_ro.key:ro
+    entrypoint:
+      - bash
+      - -c
+      - |
+        cp /mongo_ro.key /mongo.key
+        chmod 400 /mongo.key
+        chown mongodb:mongodb /mongo.key
+        exec docker-entrypoint.sh $$@
+    command: ["mongod", "--keyFile", "/mongo.key", "--replSet", "rs0"]
+  init-rs:
+    image: mongo:latest
+    env_file:
+      - ./.env
+    volumes:
+      - ./mongo/init_rs.sh:/init_rs_ro.sh:ro
+    entrypoint:
+      - bash
+      - -c
+      - |
+        cp /init_rs_ro.sh /init_rs.sh
+        chmod +x /init_rs.sh
+        /init_rs.sh
